@@ -10,6 +10,7 @@ from abc import ABC,abstractmethod
 from bisect import bisect_left,insort
 import bitarray
 import statistics as stats
+from point_embedding import embed,list_to_matrix,loss
 
 class Genetic:
     
@@ -26,6 +27,10 @@ class Genetic:
     
     @abstractmethod
     def mutate(self):
+        pass
+    
+    @abstractmethod 
+    def genetic_distance(self, other):
         pass
     
     
@@ -100,6 +105,11 @@ class one_zero_knap_sack(Genetic):
                 g.mutation_rate = max(0, g.mutation_rate)
         return g
     
+    def genetic_distance(self, other):
+        n = len(self.bit_array)
+        return sum(1 for i in range(n) if self.bit_array[i]!=other.bit_array[i])
+        
+
 class Selector:
     
     @abstractmethod 
@@ -220,7 +230,18 @@ def random_evolve(weights, values, cap, iterations=1000):
             best_val = g.fitness()
             best = g 
             
-    return best
+    return best 
+
+
+def create_graph(gene_pool):
+    edges = []
+    for g_1 in range(len(gene_pool)):
+        for g_2 in range(g_1+1,len(gene_pool)):
+            other = gene_pool[g_2]
+            w = gene_pool[g_1].genetic_distance(other)
+            edges.append((g_1,g_2, w))
+    return edges
+
 
 #https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/
 def knapsack(wt, val, W, n, t=None): 
